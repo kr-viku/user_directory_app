@@ -5,10 +5,8 @@ function UserDetails() {
   const { userId } = useParams();
   const [userDetails, setUserDetails] = useState({});
   const [countryList, setCountryList] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [userPosts, setUserPosts] = useState([]);
-  // const [selectedUserId, setSelectedUserId] = useState(userId);
   const [clockPaused, setClockPaused] = useState(false);
 
   useEffect(() => {
@@ -18,17 +16,6 @@ function UserDetails() {
       .then(user => setUserDetails(user))
       .catch(error => console.error('Error fetching user details:', error));
 
-    // Fetch the list of countries
-    // fetch('http://worldtimeapi.org/api/timezone')
-    // .then(response => response.json())
-    // .then(countries => {
-    //   // Extract country names from the list
-    //   const countryNames = countries.map(country => country.split('/')[0]);
-    //   setCountryList(countryNames);
-    //   console.log(countryNames)
-    // })
-    // .catch(error => console.error('Error fetching countries:', error));
-
     // Fetch user posts based on userId
     fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`)
       .then(response => response.json())
@@ -36,75 +23,31 @@ function UserDetails() {
       .catch(error => console.error('Error fetching user posts:', error));
   }, [userId]);
 
-
-  
-
-  // useEffect(() => {
-  //   // Update userId when userId changes
-  //   setSelectedUserId(userId);
-  // }, [userId]);
-
   useEffect(() => {
     // Fetch the list of countries
     fetch('https://worldtimeapi.org/api/timezone')
       .then(response => response.json())
       .then(timezones => {
-        // Extract unique country names from the list of timezones
-        // const countrySet = new Set(timezones.map(timezone => timezone.split('/')[0]));
-        console.log(timezones)
-         const uniqueCountries = [...countryList];
-        timezones.map((ele)=>{
-          const countryData={
-            area:ele.split('/')[0],
-            location:ele.split('/')[1],
-          }
-          console.log(countryData)
-            uniqueCountries.push(countryData)          
-           console.log(uniqueCountries)
-        })
-
-        setCountryList(uniqueCountries);
-        // const uniqueCountries = [...countrySet];
-        // setCountryList(uniqueCountries);
+        setCountryList(timezones);
+       
       })
       .catch(error => console.error('Error fetching countries:', error));
   }, []);
 
 
-
-  // useEffect(() => {
-  //   // Fetch current time for the selected country
-  //   const fetchCurrentTime = async () => {
-  //     if (!clockPaused) {
-  //       try {
-  //         const response = await fetch(`http://worldtimeapi.org/api/timezone/${selectedCountry}`);
-  //         const data = await response.json();
-  //         setCurrentTime(data.utc_datetime);
-  //       } catch (error) {
-  //         console.error('Error fetching current time:', error);
-  //       }
-  //     }
-  //   };
-
-  //   const intervalId = setInterval(fetchCurrentTime, 1000);
-
-  //   // Cleanup interval when component unmounts
-  //   return () => clearInterval(intervalId);
-  // }, [selectedCountry, clockPaused]);
-
-
-  const handleCountryChange = async (country) => {
+  const handleCountryChange = async (e) => {
     // Pause the clock when changing the selected country
     // setClockPaused(true);
 
-    console.log(country)
-    setSelectedCountry(country.location)
+    console.log(e.target.value);
+    let countryData = e.target.value;
+
+    let country = countryData.split("/")
     try {
-      const response = await fetch(`http://worldtimeapi.org/api/timezone/${country.area}/${country.location}`);
+      const response = await fetch(`https://worldtimeapi.org/api/timezone/${country[0]}/${country[1]}`);
       const data = await response.json();
       console.log(data);
-      // setCurrentTime(data.utc_datetime);
-      // setSelectedCountry(selectedCountry);
+      setCurrentTime(data.utc_datetime);
     } catch (error) {
       console.error('Error fetching current time:', error);
     }
@@ -116,7 +59,8 @@ function UserDetails() {
   const handlePauseResumeClick = () => {
     setClockPaused(!clockPaused);
   };
-console.log(countryList)
+
+  
   return (
     <div>
       <h1>User Details</h1>
@@ -126,11 +70,10 @@ console.log(countryList)
         <p>Address: {userDetails.address && userDetails.address.city}, {userDetails.address && userDetails.address.country}</p>
         {/* Add more user details as needed */}
 
-        <select value={selectedCountry} onChange={handleCountryChange}>
-          <option value="">Select a country</option>
+        <select onChange={(e) => handleCountryChange(e)}>
           {countryList.map((country, index) => (
-            <option key={index} value={country}>
-              {country.location}
+            <option key={country+index+1} value={country}>
+              {country}
             </option>
           ))}
         </select>
